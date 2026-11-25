@@ -1,0 +1,50 @@
+
+name: Build IBS Simulator Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'IBS-Simulator-Combined-MYBOC-2678.zip'
+      - '.github/workflows/build-flutter.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract IBS source
+        run: unzip -q IBS-Simulator-Combined-MYBOC-2678.zip -d workspace
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        working-directory: workspace/IBS-Simulator-Combined/Flutter
+        run: flutter pub get
+
+      - name: Build APK
+        working-directory: workspace/IBS-Simulator-Combined/Flutter
+        run: flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: IBS-Simulator-Flutter-APK
+          path: workspace/IBS-Simulator-Combined/Flutter/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
